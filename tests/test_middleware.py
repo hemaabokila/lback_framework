@@ -1,41 +1,33 @@
-import unittest
-from lback.middleware import MiddlewareManager
-from lback.auth import AuthMiddleware
-from lback.debug import DebugMiddleware
+from lback.core.router import Route
 
-class TestMiddleware(unittest.TestCase):
-    def setUp(self):
-        self.middleware_manager = MiddlewareManager()
+def setup_function():
+    global test_view, route
+    test_view = lambda request: {"status_code": 200, "body": "Test passed"}
+    route = Route(path="/test", view=test_view, methods=['GET'])
 
-    def test_auth_middleware_authorized(self):
-        auth_middleware = AuthMiddleware()
-        self.middleware_manager.add_middleware(auth_middleware)
-        request = type('Request', (), {"headers": {"Authorization": "Bearer token"}})
-        response = self.middleware_manager.process_request(request)
-        self.assertIsNone(response)
+def test_handle_request():
+    request = type('Request', (), {"path": "/test", "method": "GET"})
+    response = route.handle_request(request)
+    assert response['status_code'] == 200
+    assert response['body'] == "Test passed"
 
-    def test_auth_middleware_unauthorized(self):
-        auth_middleware = AuthMiddleware()
-        self.middleware_manager.add_middleware(auth_middleware)
-        request = type('Request', (), {"headers": {}})
-        response = self.middleware_manager.process_request(request)
-        self.assertEqual(response['status_code'], 401)
-        self.assertEqual(response['body'], "Unauthorized")
+def test_method_not_allowed():
+    request = type('Request', (), {"path": "/test", "method": "POST"})
+    response = route.handle_request(request)
+    assert response['status_code'] == 405
+    assert response['body'] == "Method Not Allowed"
 
-    def test_debug_middleware(self):
-        debug_middleware = DebugMiddleware()
-        self.middleware_manager.add_middleware(debug_middleware)
-        request = type('Request', (), {"path": "/test", "method": "GET"})
-        response = self.middleware_manager.process_request(request)
-        self.assertIsNone(response)
+def test_route_not_found():
+    request = type('Request', (), {"path": "/nonexistent", "method": "GET"})
+    response = route.handle_request(request)
+    assert response['status_code'] == 404
+    assert response['body'] == "Not Found"
 
-    def test_debug_middleware_response_logging(self):
-        debug_middleware = DebugMiddleware()
-        self.middleware_manager.add_middleware(debug_middleware)
-        request = type('Request', (), {"path": "/test", "method": "GET"})
-        response = {"status_code": 200, "body": "OK"}
-        processed_response = self.middleware_manager.process_response(request, response)
-        self.assertEqual(processed_response, response)
-
-if __name__ == '__main__':
-    unittest.main()
+def test_route_with_variable():
+    route_with_var = Route(path="/test/<id>", view=test_view, methods=['GET'])
+    request = type('Request', (), {"path": "/test/123", "method": "GET"})
+    response = route_with_var.handle_request(request)
+    assert response['status_code'] == 200
+    assert response['body'] == "Test passed"
+    assert hasattr(request, "params")
+    assert request.params == {'id': '123'}

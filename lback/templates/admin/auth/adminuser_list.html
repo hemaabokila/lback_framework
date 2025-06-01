@@ -1,0 +1,184 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin - Admin Users List{% endblock %}
+
+{% block main_content %}
+<div class="container mx-auto p-4">
+
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-8 bg-white p-6 rounded-lg shadow-md border border-gray-200">
+        <h2 class="text-3xl font-extrabold text-gray-900 flex-grow text-center sm:text-left mb-4 sm:mb-0">
+            Manage {{ model_name | default('Objects') }}
+        </h2>
+        <div class="flex items-center space-x-3">
+            <a href="/admin/{{ model_name | lower }}/add/"
+               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg>
+                Add New
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        <div id="flash-messages">
+            {% for message in messages %}
+                <div class="bg-{{ message.category }}-100 border border-{{ message.category }}-400 text-{{ message.category }}-700 px-4 py-3 rounded relative mb-4" role="alert">
+                    <span class="block sm:inline">{{ message.text }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="bg-white p-6 rounded-lg shadow-md overflow-x-auto">
+        <table class="min-w-full leading-normal">
+            <thead>
+                <tr>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        ID
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Username
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Email
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Superuser
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Role
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in admin_users %}
+                     <tr class="hover:bg-gray-50 table-row cursor-pointer" 
+                        data-object-id="{{ user.id }}" 
+                        data-model-name="{{ model_name | lower }}">
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                            <p class="text-gray-900 whitespace-no-wrap">{{ user.id }}</p>
+                        </td>
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                            <p class="text-gray-900 whitespace-no-wrap">{{ user.username }}</p>
+                        </td>
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                            <p class="text-gray-900 whitespace-no-wrap">{{ user.email }}</p>
+                        </td>
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                            <p class="text-gray-900 whitespace-no-wrap">{% if user.is_superuser %}Yes{% else %}No{% endif %}</p>
+                        </td>
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                            <p class="text-gray-900 whitespace-no-wrap">{{ user.role.name if user.role else 'N/A' }}</p>
+                        </td>
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                            <div class="flex justify-start items-center space-x-3">
+                                {% if current_user.is_superuser %} 
+                                    <a href="/admin/{{ model_name | lower }}/{{ user.id }}/change/" 
+                                       class="text-blue-600 hover:text-blue-900 transition-colors duration-200">
+                                        Edit
+                                    </a>
+
+                                    {% if current_user.id == 1 %}
+                                        {% if user.id != current_user.id %}
+                                            <form action="/admin/{{ model_name | lower }}/{{ user.id }}/delete/" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this {{ model_name | default('object') }} ({{ user.username }})?');">
+                                                {% if csrf_token %}
+                                                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                                                {% endif %}
+                                                <button type="submit" class="text-red-600 hover:text-red-900 transition-colors duration-200 bg-transparent border-none cursor-pointer p-0">
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <span class="text-gray-500 text-xs">Primary Admin</span>
+                                        {% endif %}
+                                        
+                                    {% elif not user.is_superuser %}
+                                        <form action="/admin/{{ model_name | lower }}/{{ user.id }}/delete/" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this {{ model_name | default('object') }} ({{ user.username }})?');">
+                                            {% if csrf_token %}
+                                            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                                            {% endif %}
+                                            <button type="submit" class="text-red-600 hover:text-red-900 transition-colors duration-200 bg-transparent border-none cursor-pointer p-0">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <span class="text-gray-500 text-xs">Superuser Account</span>
+                                    {% endif %}
+                                    
+                                {% elif user.id == current_user.id %}
+                                    <a href="/admin/{{ model_name | lower }}/{{ user.id }}/change/" 
+                                       class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
+                                    <span class="text-gray-500 text-xs">No Delete</span>
+                                {% else %}
+                                    <span class="text-gray-500">No actions</span>
+                                {% endif %}
+                            </div>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center text-gray-500">
+                            No admin users found.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+{% endblock %}
+
+
+{% block extra_body %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const flashMessages = document.getElementById('flash-messages');
+            if (flashMessages) {
+                flashMessages.querySelectorAll('button').forEach(button => {
+                    button.addEventListener('click', () => button.parentElement.remove());
+                });
+                setTimeout(function() {
+                    flashMessages.style.transition = 'opacity 0.5s ease-in-out';
+                    flashMessages.style.opacity = '0';
+                    setTimeout(function() {
+                        flashMessages.remove();
+                    }, 500);
+                }, 5000);
+            }
+
+            const tableRows = document.querySelectorAll('.table-row');
+            tableRows.forEach(row => {
+                row.addEventListener('click', function(event) {
+                    if (event.target.closest('a') || event.target.closest('button') || event.target.closest('form')) {
+                        return;
+                    }
+                    const objectId = this.dataset.objectId;
+                    const modelName = this.dataset.modelName;
+                    if (objectId && modelName) {
+                        window.location.href = `/admin/${modelName}/${objectId}/`;
+                    }
+                });
+            });
+            const filterButton = document.getElementById('filter-dropdown-button');
+            const filterPanel = document.getElementById('filter-panel');
+
+            if (filterButton && filterPanel) {
+                filterButton.addEventListener('click', function() {
+                    filterPanel.classList.toggle('show');
+                });
+
+                document.addEventListener('click', function(event) {
+                    if (!filterButton.contains(event.target) && !filterPanel.contains(event.target)) {
+                        filterPanel.classList.remove('show');
+                    }
+                });
+
+                filterPanel.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                });
+            }
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,7 @@
+from lback.admin.registry import admin
+...
+from .models import Course
+
+# Register the models with the admin registry
+admin.register(Course)
+...

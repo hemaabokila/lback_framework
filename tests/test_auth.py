@@ -1,42 +1,39 @@
-import unittest
+import pytest
 from unittest.mock import patch, MagicMock
-from lback.auth import AuthMiddleware
-from datetime import *
+from lback.middlewares.auth_midlewares import AuthMiddleware
+from datetime import datetime, timedelta
 
-class TestAuthMiddleware(unittest.TestCase):
+@pytest.fixture
+def middleware():
+    return AuthMiddleware()
 
-    def setUp(self):
-        self.middleware = AuthMiddleware()
+@patch('auth.Session')
+@patch('auth.User')
+def test_process_request_valid_token(mock_user, mock_session, middleware):
+    mock_request = MagicMock()
+    mock_request.headers = {'Authorization': 'Bearer valid_token'}
+    mock_session.return_value.__enter__.return_value.query.return_value.filter_by.return_value.first.return_value = mock_user
+    mock_user.token_expiry = datetime.utcnow() + timedelta(hours=1)
+    response = middleware.process_request(mock_request)
+    assert response is None
 
-    @patch('lback.auth.Session')
-    @patch('lback.auth.User')
-    def test_process_request_valid_token(self, mock_user, mock_session):
-        mock_request = MagicMock()
-        mock_request.headers = {'Authorization': 'Bearer valid_token'}
-        mock_session.return_value.__enter__.return_value.query.return_value.filter_by.return_value.first.return_value = mock_user
-        mock_user.token_expiry = datetime.utcnow() + timedelta(hours=1)
-        response = self.middleware.process_request(mock_request)
-        self.assertIsNone(response) 
-    @patch('lback.auth.Session')
-    @patch('lback.auth.User')
-    
-    def test_process_request_invalid_token(self, mock_user, mock_session):
-        mock_request = MagicMock()
-        mock_request.headers = {'Authorization': 'Bearer invalid_token'}
-        mock_session.return_value.__enter__.return_value.query.return_value.filter_by.return_value.first.return_value = None
-        response = self.middleware.process_request(mock_request)
-        self.assertEqual(response['status_code'], 403)
+@patch('auth.Session')
+@patch('auth.User')
+def test_process_request_invalid_token(mock_user, mock_session, middleware):
+    mock_request = MagicMock()
+    mock_request.headers = {'Authorization': 'Bearer invalid_token'}
+    mock_session.return_value.__enter__.return_value.query.return_value.filter_by.return_value.first.return_value = None
+    response = middleware.process_request(mock_request)
+    assert response['status_code'] == 403
 
-    def test_process_request_no_auth_header(self):
-        mock_request = MagicMock()
-        mock_request.headers = {}
-        response = self.middleware.process_request(mock_request)
-        self.assertEqual(response['status_code'], 401)
+def test_process_request_no_auth_header(middleware):
+    mock_request = MagicMock()
+    mock_request.headers = {}
+    response = middleware.process_request(mock_request)
+    assert response['status_code'] == 401
 
-    def test_process_request_invalid_header_format(self):
-        mock_request = MagicMock()
-        mock_request.headers = {'Authorization': 'InvalidFormat'}
-        response = self.middleware.process_request(mock_request)
-        self.assertEqual(response['status_code'], 401) 
-if __name__ == '__main__':
-    unittest.main()
+def test_process_request_invalid_header_format(middleware):
+    mock_request = MagicMock()
+    mock_request.headers = {'Authorization': 'InvalidFormat'}
+    response = middleware.process_request(mock_request)
+    assert response['status_code'] == 401

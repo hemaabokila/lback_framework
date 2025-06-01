@@ -1,0 +1,112 @@
+{% extends "admin/base.html" %}
+{% block title %}Admin - Dashboard{% endblock %}
+{% block main_content %}
+{% block extra_head %}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base font for the body */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Styles for the detail cards, providing a cleaner look */
+        .detail-item-card {
+            @apply bg-white p-4 rounded-lg shadow-sm border border-gray-200 transition-shadow duration-200 hover:shadow-md;
+        }
+
+        /* Style for detail labels (field names) */
+        .detail-label {
+            @apply text-gray-600 text-xs sm:text-sm font-semibold uppercase tracking-wider mb-1;
+        }
+
+        /* Style for detail values (field content) */
+        .detail-value {
+            @apply text-gray-900 text-sm sm:text-base leading-relaxed;
+            word-break: break-word; /* Ensure long words break */
+        }
+
+        /* Specific style for large text areas like descriptions */
+        .detail-value-large-text {
+            @apply text-gray-800 text-base leading-relaxed whitespace-pre-wrap; /* Preserve formatting for newlines */
+            word-break: break-word;
+        }
+
+        /* Style for file upload links/images */
+        .detail-file-link {
+            @apply text-blue-600 hover:text-blue-800 underline transition-colors duration-200;
+        }
+        .detail-image {
+            @apply max-w-full h-auto rounded-md mt-2 shadow-sm; /* Use max-w-full for responsiveness */
+            max-height: 250px; /* Limit image height to prevent overflow */
+            object-fit: contain; /* Ensures the image is fully visible */
+        }
+
+        /* Style for JSON data display */
+        .detail-json {
+            @apply bg-gray-50 text-gray-800 p-3 rounded-md border border-gray-300 overflow-auto text-xs sm:text-sm;
+            font-family: 'Fira Code', 'JetBrains Mono', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace; /* Monospace font for code */
+            max-height: 200px; /* Limit height and allow scrolling for large JSON */
+        }
+        
+        /* Style for code blocks */
+        .detail-code-block {
+            @apply bg-gray-900 text-green-300 p-3 rounded-md border border-gray-700 overflow-auto text-xs sm:text-sm;
+            font-family: 'Fira Code', 'JetBrains Mono', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+            max-height: 300px; /* Adjust as needed */
+        }
+
+        /* Style for Many-to-Many list */
+        .detail-m2m-list {
+            @apply list-disc list-inside text-gray-800 pl-4;
+        }
+        .detail-m2m-list-item {
+            @apply mb-1 text-sm;
+        }
+
+        /* Style for Boolean values */
+        .detail-boolean-true {
+            @apply text-green-600 font-medium;
+        }
+        .detail-boolean-false {
+            @apply text-red-600 font-medium;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+{% endblock %}
+<div class="flex flex-col items-center justify-center h-full">
+    <img src="{{ static('Lback_Logo.png') }}" alt="Lback Logo" class="w-32 h-32 mb-6 rounded-lg shadow-md" />
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Welcome to <span class="text-orange-600">Lback Framework</span></h1>
+    <p class="text-gray-600 text-lg mb-4 text-center max-w-xl">
+        This is your professional admin dashboard, powered by the <span class="font-semibold text-orange-700">Lback Framework</span>.
+        <br>
+        Designed and developed by <span class="font-semibold text-orange-700">Ibrahem Abokila</span>.
+        <br>
+        For support or inquiries, you can reach out via:
+        <br>
+        <span class="block mt-2">
+            Email: <a href="mailto:ibrahemabokila@gmail.com" class="text-orange-600 underline hover:text-orange-800 transition-colors duration-200">ibrahemabokila@gmail.com</a>
+        </span>
+        <span class="block">
+            LinkedIn: <a href="https://www.linkedin.com/in/ibrahem-abo-kila/" target="_blank" rel="noopener noreferrer" class="text-orange-600 underline hover:text-orange-800 transition-colors duration-200">Ibrahem Abo Kila</a>
+        </span>
+        <span class="block">
+            YouTube Channel: <a href="https://www.youtube.com/@cryptodome22" target="_blank" rel="noopener noreferrer" class="text-orange-600 underline hover:text-orange-800 transition-colors duration-200">Lback Official Channel</a>
+        </span>
+    </p>
+</div>
+{% endblock %}
+{% block extra_body %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.model-link').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                fetch(btn.dataset.url)
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById('main-content-area').innerHTML = html;
+                    });
+            });
+        });
+    });
+</script>
+{% endblock %}

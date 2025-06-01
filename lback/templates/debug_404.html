@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug 404 Not Found</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; line-height: 1.6; color: #333; }
+        h1, h2 { color: #c0392b; margin-bottom: 10px; }
+        h1 { font-size: 2em; }
+        h2 { font-size: 1.5em; margin-top: 25px; }
+        pre { background-color: #f4f4f4; padding: 15px; overflow-x: auto; border-radius: 5px; }
+        .request-details { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
+        .request-details h3 { font-size: 1.2em; margin-bottom: 10px; color: #555; }
+        .request-details ul { list-style: none; padding: 0; }
+        .request-details li { margin-bottom: 8px; }
+        .request-details li strong { color: #000; }
+        .routes-list { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
+        .routes-list ul { list-style: disc; margin-left: 20px; padding: 0; }
+        .routes-list li { margin-bottom: 5px; }
+        .routes-list li code { font-weight: bold; }
+        .footer { margin-top: 40px; border-top: 1px solid #eee; padding-top: 15px; font-size: 0.9em; color: #777; text-align: center;}
+    </style>
+</head>
+<body>
+    <h1>404 Not Found</h1>
+    <p>The requested URL was not found on this server.</p>
+
+    <h2>Request Details:</h2>
+    <p><strong>Method:</strong> {{ request_method }}</p>
+    <p><strong>Path:</strong> {{ request_path }}</p>
+    <h3>Headers:</h3>
+    <ul>
+        {% for key, value in request_headers.items() %}
+            <li><strong>{{ key | e }}:</strong> {{ value | e }}</li>
+        {% endfor %}
+    </ul>
+
+    {% if routes %}
+    <div class="routes-list">
+        <h2>Available Routes:</h2>
+        <ul>
+            {% for route in routes %}
+                <li><code>{{ route.path }}</code> ({{ route.methods | join(', ') }})</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        Lback developed by ibrahem abokila | Contact: <a href="mailto:ibrahemabokila@gmail.com">ibrahemabokila@gmail.com</a>
+    </div>
+
+</body>
+</html>

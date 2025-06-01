@@ -1,0 +1,13 @@
+# my_app/views.py
+from lback.utils.shortcuts import render
+...
+from .models import Course
+
+def course_list_view(request):
+    db_session = request.db_session
+    courses = db_session.query(Course).all()
+    context = {
+        "courses": courses, 
+    }
+    return render(request, "course_list.html", context)
+...

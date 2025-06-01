@@ -1,0 +1,8 @@
+from lback.utils.urls import path
+...
+from .views import course_list_view
+
+urlpatterns = [
+    path("/courses/", course_list_view, allowed_methods=["GET"], name="course_list"),
+]
+...

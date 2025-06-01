@@ -1,55 +1,23 @@
-import sys
-from lback.commands import Commands
+import argparse
+
+from lback.commands.project import ProjectCommands
+from lback.core.config import Config
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: Lback <command>")
-        Commands.help()
-        return
+    parser = argparse.ArgumentParser(description="Lback Framework Utility")
+    subparsers = parser.add_subparsers(dest="command", required=True)
 
-    command = sys.argv[1]
+    startproject_parser = subparsers.add_parser("startproject", help="Create a new project")
+    startproject_parser.add_argument("project_name", help="Project name")
 
-    if command == "startproject":
-        if len(sys.argv) > 2:
-            project_name = sys.argv[2]
-            Commands.startproject(project_name)
-        else:
-            print("Usage: Lback startproject <project_name>")
-    
-    elif command == "startapp":
-        if len(sys.argv) > 2:
-            app_name = sys.argv[2]
-            Commands.startapp(app_name)
-        else:
-            print("Usage: Lback startapp <app_name>")
-    
+    args = parser.parse_args()
 
-    elif command == "runserver":
-        Commands.runserver()
- 
-    elif command == "migrate":
-        Commands.migrate()
-
-    elif command == "makemigrations":
-        Commands.makemigrations()
-
-
-    elif command == "test":
-        Commands.test()
-
-
-    elif command == "collectstatic":
-        Commands.collectstatic()
-
-
-    elif command == "help":
-        Commands.help()
-
- 
-    else:
-        print(f"Unknown command: {command}")
-        print("Use 'Lback help' for a list of available commands.")
-        Commands.help()
+    if args.command == "startproject":
+        config = Config()
+        project = ProjectCommands(config, args.project_name)
+        project.startproject()
+        print(f"Project '{args.project_name}' created successfully!")
+        print(f"Now you can use 'python manage.py <command>' inside your project.")
 
 if __name__ == "__main__":
     main()

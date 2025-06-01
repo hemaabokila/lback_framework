@@ -1,0 +1,473 @@
+{% extends "admin/base.html" %} 
+
+{% block title %}Admin - Manage {{ model_name | default('Objects') }}{% endblock %}
+
+{% block extra_head %}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base font for the body */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Style for table row hover effect */
+        .table-row:hover {
+            @apply bg-gray-50; /* Tailwind gray-50 */
+            cursor: pointer; /* Indicate clickable */
+        }
+        /* Style for sticky table header */
+        .sticky-header th {
+            position: sticky;
+            top: 0;
+            @apply bg-gray-100; /* Lighter gray for sticky header */
+            z-index: 10; /* Ensure header is above scrolling content */
+        }
+        /* Style for truncating long text */
+        .truncate-text {
+            max-width: 200px; /* Adjust max-width as needed */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: inline-block;
+            vertical-align: middle; /* Align with middle of the cell */
+        }
+        /* Style for image previews in list */
+        .list-image-preview {
+            @apply max-w-[40px] h-auto rounded-sm object-contain; /* Smaller size for list view, object-contain */
+        }
+        /* Style for JSON data in list */
+        .list-json-data {
+            @apply whitespace-pre-wrap word-break-all font-mono text-xs bg-gray-50 p-1 rounded-sm border border-gray-200; /* Compact for list */
+            max-width: 150px; /* Limit width */
+            overflow: hidden; /* Hide overflow */
+            text-overflow: ellipsis; /* Add ellipsis */
+        }
+        /* Style for boolean values */
+        .boolean-true { @apply text-green-600 font-medium; }
+        .boolean-false { @apply text-red-600 font-medium; }
+
+        /* Custom style for filter panel dropdown */
+        .filter-panel-dropdown {
+            display: none; /* Hidden by default */
+            /* Add Tailwind classes for appearance */
+            @apply absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-20 p-4;
+        }
+        .filter-panel-dropdown.show {
+            display: block;
+        }
+    </style>
+    {% endblock %}
+
+{% block main_content %}
+<div class="container mx-auto p-4">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-8 bg-white p-6 rounded-lg shadow-md border border-gray-200">
+            <h2 class="text-3xl font-extrabold text-gray-900 flex-grow text-center sm:text-left mb-4 sm:mb-0">
+                Manage {{ model_name | default('Objects') }}
+            </h2>
+            <div class="flex items-center space-x-3">
+                <a href="/admin/{{ model_name | lower }}/add/"
+                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg>
+                    Add New
+                </a>
+            </div>
+        </div>
+
+        {% if request.get_context('flash_messages') %}
+            <div id="flash-messages" class="mb-6">
+                {% for message in request.get_context('flash_messages') %}
+                    <div class="p-4 rounded-lg text-sm mb-3 flex items-center justify-between
+                        {% if message.category == 'error' %} bg-red-100 text-red-800 {% elif message.category == 'warning' %} bg-yellow-100 text-yellow-800 {% elif message.category == 'info' %} bg-blue-100 text-blue-800 {% elif message.category == 'success' %} bg-green-100 text-green-800 {% endif %}">
+                        <span>{{ message.message }}</span>
+                        <button type="button" class="text-sm font-medium opacity-75 hover:opacity-100 ml-4" onclick="this.parentElement.remove()">
+                            &times;
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6 border border-gray-200">
+            <form action="" method="GET" class="flex flex-col md:flex-row items-stretch md:items-end gap-4">
+                
+                <div class="flex-grow">
+                    <label for="search-input" class="block text-xs font-medium text-gray-700 uppercase mb-1">Search</label>
+                    <input type="text" id="search-input" name="q" placeholder="Search {{ model_name | lower }}..."
+                           value="{{ search_query | default('') }}"
+                           class="block w-full shadow-sm text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 p-2">
+                </div>
+
+                {% if filterable_fields_data %}
+                <div class="relative inline-block text-left">
+                    <button type="button" id="filter-dropdown-button" class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" aria-expanded="true" aria-haspopup="true">
+                        <svg class="-ml-1 mr-2 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L4.293 6.707A1 1 0 014 6V3z" clip-rule="evenodd" />
+                        </svg>
+                        Filters
+                        <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+
+                    <div id="filter-panel" class="filter-panel-dropdown">
+                        {% for filter_field in filterable_fields_data.values() %}
+                            <div class="mb-4">
+                                <label for="{{ filter_field.name }}" class="block text-sm font-medium text-gray-700 mb-1">{{ filter_field.label | replace('_', ' ') | capitalize }}:</label>
+                                {% if filter_field.control == 'select' %}
+                                    <select id="{{ filter_field.name }}" name="{{ filter_field.name }}"
+                                            class="block w-full shadow-sm text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 p-2">
+                                        {% for choice in filter_field.choices %}
+                                            <option value="{{ choice.value }}" {% if choice.value == filter_field.current_value %}selected{% endif %}>
+                                                {{ choice.text }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                {% elif filter_field.control == 'date_range_inputs' %}
+                                    <div class="flex items-center space-x-2">
+                                        <input type="{{ 'datetime-local' if filter_field.type == 'datetime_range' else 'date' }}"
+                                               id="{{ filter_field.name }}_min" name="{{ filter_field.name }}_min"
+                                               value="{{ filter_field.current_min_value | default('') }}"
+                                               placeholder="From"
+                                               class="block w-1/2 shadow-sm text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 p-2">
+                                        <span>to</span>
+                                        <input type="{{ 'datetime-local' if filter_field.type == 'datetime_range' else 'date' }}"
+                                               id="{{ filter_field.name }}_max" name="{{ filter_field.name }}_max"
+                                               value="{{ filter_field.current_max_value | default('') }}"
+                                               placeholder="To"
+                                               class="block w-1/2 shadow-sm text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 p-2">
+                                    </div>
+                                {% elif filter_field.control == 'numeric_range_inputs' %}
+                                    <div class="flex items-center space-x-2">
+                                        <input type="number" step="{{ '0.01' if filter_field.type == 'numeric_range' else '1' }}"
+                                               id="{{ filter_field.name }}_min" name="{{ filter_field.name }}_min"
+                                               value="{{ filter_field.current_min_value | default('') }}"
+                                               placeholder="Min"
+                                               class="block w-1/2 shadow-sm text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 p-2">
+                                        <span>to</span>
+                                        <input type="number" step="{{ '0.01' if filter_field.type == 'numeric_range' else '1' }}"
+                                               id="{{ filter_field.name }}_max" name="{{ filter_field.name }}_max"
+                                               value="{{ filter_field.current_max_value | default('') }}"
+                                               placeholder="Max"
+                                               class="block w-1/2 shadow-sm text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 p-2">
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="flex flex-shrink-0 space-x-3">
+                    <button type="submit"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L4.293 6.707A1 1 0 014 6V3z" clip-rule="evenodd"></path></svg>
+                        Apply Filters
+                    </button>
+                    {% if search_query or filter_params or current_sort_by %}
+                        {% set base_url = request.path.split('?')[0] %}
+                        <a href="{{ base_url }}" 
+                           class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            Clear
+                        </a>
+                    {% endif %}
+                </div>
+
+                <input type="hidden" name="per_page" value="{{ pagination.per_page | default(20) }}">
+                {% if current_sort_by %}
+                    <input type="hidden" name="sort_by" value="{{ current_sort_by }}">
+                    <input type="hidden" name="sort_order" value="{{ current_sort_order }}">
+                {% endif %}
+            </form>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+            {% if objects %}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="sticky-header"> 
+                            <tr>
+                                {% for field_data in fields_to_display %}
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        {% if field_data.sortable %}
+                                            {% set next_sort_order = 'desc' if field_data.is_current_sort and current_sort_order == 'asc' else 'asc' %}
+
+                                            {% set query_params_list = [] %}
+                                            {% if search_query %}
+                                                {% set query_params_list = query_params_list + [('q', search_query)] %}
+                                            {% endif %}
+                                            {% for key, value in filter_params.items() %}
+                                                {% if value is not none and value != '' %}
+                                                    {% set query_params_list = query_params_list + [(key, value)] %}
+                                                {% endif %}
+                                            {% endfor %}
+                                            {% set query_params_list = query_params_list + [('per_page', pagination.per_page | default(20))] %}
+                                            {% set query_params_list = query_params_list + [('sort_by', field_data.name), ('sort_order', next_sort_order)] %}
+                                            {% set sort_url = request.path ~ '?' ~ query_params_list | urlencode %}
+
+                                            <a href="{{ sort_url }}" class="group inline-flex items-center">
+                                                {{ field_data.name | replace('_', ' ') | capitalize }}
+                                                {% if field_data.is_current_sort %}
+                                                    {% if current_sort_order == 'asc' %}
+                                                        <svg class="ml-2 h-4 w-4 text-gray-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                            <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
+                                                        </svg>
+                                                    {% else %}
+                                                        <svg class="ml-2 h-4 w-4 text-gray-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                        </svg>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <svg class="ml-2 h-4 w-4 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity duration-200" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 5v14l11-7z"/></svg>
+                                                {% endif %}
+                                            </a>
+                                        {% else %}
+                                            {{ field_data.name | replace('_', ' ') | capitalize }}
+                                        {% endif %}
+                                    </th>
+                                {% endfor %}
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for obj in objects %}
+                                <tr class="table-row" data-object-id="{{ obj.id }}" data-model-name="{{ model_name | lower }}">
+                                    {% for field_data in fields_to_display %}
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {% set field_value = attribute(obj, field_data.name) %}
+                                            {% if field_value is none %}
+                                                <span class="text-gray-400 italic">None</span>
+                                            {% elif field_data.type == 'boolean' %}
+                                                {% if field_value == True %}
+                                                    <span class="boolean-true">Yes</span>
+                                                {% else %}
+                                                    <span class="boolean-false">No</span>
+                                                {% endif %}
+                                            {% elif field_data.type == 'datetime' %}
+                                                {{ field_value | date("%Y-%m-%d %H:%M:%S") }}
+                                            {% elif field_data.type == 'date' %}
+                                                {{ field_value | date("%Y-%m-%d") }}
+                                            {% elif field_data.type == 'json' %}
+                                                <span class="list-json-data">{{ field_value | tojson(indent=None) if field_value is mapping else field_value | string }}</span>
+                                            {% elif field_data.type == 'foreign_key' %}
+                                                {{ field_value | default("None") }}
+                                            {% elif field_data.type == 'manytomany' %}
+                                                {% if field_value %}
+                                                    {% set related_items = field_value | map(attribute='__str__') | list %}
+                                                    {% if related_items | length > 3 %}
+                                                        <span class="truncate-text">{{ related_items | length }} related items</span>
+                                                    {% else %}
+                                                        <span class="truncate-text">{{ related_items | join(', ') }}</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="text-gray-400 italic">None</span>
+                                                {% endif %}
+                                                {% elif field_data.type == 'file_upload' %}
+                                                    {% if field_value and field_value is string %}
+                                                        {% set file_url = field_value %} 
+                                                        {% set filename = field_value | split('/') | last %}
+                                                        {% if filename | lower | endswith(('.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp')) %}
+                                                            <a href="{{ file_url }}" target="_blank" class="file-link">
+                                                                <img src="{{ file_url }}" alt="{{ filename }}" class="list-image-preview">
+                                                            </a>
+                                                        {% else %}
+                                                            <a href="{{ file_url }}" target="_blank" class="file-link text-blue-500 hover:underline truncate-text">
+                                                                {{ filename }}
+                                                            </a>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        <span class="text-gray-400 italic">No file</span>
+                                                    {% endif %}
+                                                {% elif field_data.type in ['string', 'text'] %}
+                                                    <span class="truncate-text">{{ field_value | default('') }}</span>
+                                                {% else %}
+                                                    {{ field_v }}
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                                        <div class="flex justify-center items-center space-x-3">
+                                            <a href="/admin/{{ model_name | lower }}/{{ obj.id }}/change/" 
+                                               class="text-blue-600 hover:text-blue-900 transition-colors duration-200">
+                                                Edit
+                                            </a>
+                                            <form action="/admin/{{ model_name | lower }}/{{ obj.id }}/delete/" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this {{ model_name | default('object') }}?');">
+                                                {% if csrf_token %}
+                                                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                                                {% endif %}
+                                                <button type="submit" class="text-red-600 hover:text-red-900 transition-colors duration-200 bg-transparent border-none cursor-pointer p-0">
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="p-8 text-center text-gray-600">
+                    {% if search_query or filter_params or current_sort_by %}
+                        <p>No {{ model_name | default('objects') }} found matching your current filters or search query.</p>
+                        {% set base_url = request.path.split('?')[0] %}
+                        <a href="{{ base_url }}" class="mt-4 inline-block text-blue-600 hover:underline">Clear Filters and Search</a>
+                    {% else %}
+                        <p>No {{ model_name | default('objects') }} have been added yet.</p>
+                        <a href="/admin/{{ model_name | lower }}/add/" class="mt-4 inline-block text-green-600 hover:underline">Add New {{ model_name | default('Object') }}</a>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            {% if pagination.total_pages > 1 %}
+                <div class="px-6 py-4 border-t border-gray-200 bg-white">
+                    <nav class="flex items-center justify-between" aria-label="Pagination">
+                        <div class="flex-1 flex justify-between sm:justify-end">
+                            {% set prev_page_query_params_list = [] %}
+                            {% if search_query %}
+                                {% set prev_page_query_params_list = prev_page_query_params_list + [('q', search_query)] %}
+                            {% endif %}
+                            {% for key, value in filter_params.items() %}
+                                {% if value is not none and value != '' %}
+                                    {% set prev_page_query_params_list = prev_page_query_params_list + [(key, value)] %}
+                                {% endif %}
+                            {% endfor %}
+                            {% if current_sort_by %}
+                                {% set prev_page_query_params_list = prev_page_query_params_list + [('sort_by', current_sort_by), ('sort_order', current_sort_order)] %}
+                            {% endif %}
+                            {% set prev_page_query_params_list = prev_page_query_params_list + [('page', pagination.prev_num), ('per_page', pagination.per_page | default(20))] %}
+                            {% set prev_page_url = request.path ~ '?' ~ prev_page_query_params_list | urlencode %}
+
+                            <a href="{{ prev_page_url }}"
+                               class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 {% if not pagination.has_prev %} pointer-events-none opacity-50 {% endif %}">
+                                Previous
+                            </a>
+
+                            {% set next_page_query_params_list = [] %}
+                            {% if search_query %}
+                                {% set next_page_query_params_list = next_page_query_params_list + [('q', search_query)] %}
+                            {% endif %}
+                            {% for key, value in filter_params.items() %}
+                                {% if value is not none and value != '' %}
+                                    {% set next_page_query_params_list = next_page_query_params_list + [(key, value)] %}
+                                {% endif %}
+                            {% endfor %}
+                            {% if current_sort_by %}
+                                {% set next_page_query_params_list = next_page_query_params_list + [('sort_by', current_sort_by), ('sort_order', current_sort_order)] %}
+                            {% endif %}
+                            {% set next_page_query_params_list = next_page_query_params_list + [('page', pagination.next_num), ('per_page', pagination.per_page | default(20))] %}
+                            {% set next_page_url = request.path ~ '?' ~ next_page_query_params_list | urlencode %}
+
+                            <a href="{{ next_page_url }}"
+                               class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 {% if not pagination.has_next %} pointer-events-none opacity-50 {% endif %}">
+                                Next
+                            </a>
+                        </div>
+                        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-center">
+                            <div>
+                                <p class="text-sm text-gray-700">
+                                    Showing
+                                    <span class="font-medium">{{ (pagination.current_page - 1) * pagination.per_page + 1 }}</span>
+                                    to
+                                    <span class="font-medium">{{ (pagination.current_page - 1) * pagination.per_page + objects | length }}</span>
+                                    of
+                                    <span class="font-medium">{{ pagination.total_items }}</span>
+                                    results
+                                </p>
+                            </div>
+                        </div>
+                        <div class="hidden sm:block">
+                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                {% for p in pagination.iter_pages %}
+                                    {% if p %}
+                                        {% set page_query_params_list = [] %}
+                                        {% if search_query %}
+                                            {% set page_query_params_list = page_query_params_list + [('q', search_query)] %}
+                                        {% endif %}
+                                        {% for key, value in filter_params.items() %}
+                                            {% if value is not none and value != '' %}
+                                                {% set page_query_params_list = page_query_params_list + [(key, value)] %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        {% if current_sort_by %}
+                                            {% set page_query_params_list = page_query_params_list + [('sort_by', current_sort_by), ('sort_order', current_sort_order)] %}
+                                        {% endif %}
+                                        {% set page_query_params_list = page_query_params_list + [('page', p), ('per_page', pagination.per_page | default(20))] %}
+                                        {% set page_url = request.path ~ '?' ~ page_query_params_list | urlencode %}
+
+                                        <a href="{{ page_url }}"
+                                           class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50
+                                           {% if p == pagination.current_page %} bg-blue-600 text-white hover:bg-blue-700 {% endif %}">
+                                            {{ p }}
+                                        </a>
+                                    {% else %}
+                                        <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                            ...
+                                        </span>
+                                    {% endif %}
+                                {% endfor %}
+                            </nav>
+                        </div>
+                    </nav>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_body %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const flashMessages = document.getElementById('flash-messages');
+            if (flashMessages) {
+                flashMessages.querySelectorAll('button').forEach(button => {
+                    button.addEventListener('click', () => button.parentElement.remove());
+                });
+                setTimeout(function() {
+                    flashMessages.style.transition = 'opacity 0.5s ease-in-out';
+                    flashMessages.style.opacity = '0';
+                    setTimeout(function() {
+                        flashMessages.remove();
+                    }, 500);
+                }, 5000);
+            }
+
+            const tableRows = document.querySelectorAll('.table-row');
+            tableRows.forEach(row => {
+                row.addEventListener('click', function(event) {
+                    if (event.target.closest('a') || event.target.closest('button') || event.target.closest('form')) {
+                        return;
+                    }
+                    const objectId = this.dataset.objectId;
+                    const modelName = this.dataset.modelName;
+                    if (objectId && modelName) {
+                        window.location.href = `/admin/${modelName}/${objectId}/`;
+                    }
+                });
+            });
+
+            const filterButton = document.getElementById('filter-dropdown-button');
+            const filterPanel = document.getElementById('filter-panel');
+
+            if (filterButton && filterPanel) {
+                filterButton.addEventListener('click', function() {
+                    filterPanel.classList.toggle('show');
+                });
+
+                document.addEventListener('click', function(event) {
+                    if (!filterButton.contains(event.target) && !filterPanel.contains(event.target)) {
+                        filterPanel.classList.remove('show');
+                    }
+                });
+
+                filterPanel.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                });
+            }
+        });
+    </script>
+{% endblock %}

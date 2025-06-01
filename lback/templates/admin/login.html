@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Lback Panel</title>
+    <link href="{{ static('/css/tailwind.min.css') }}" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+    /* background colors */
+    .bg-white { background-color: #ffffff !important; }
+    .bg-gray-100 { background-color: #f7fafc !important; }
+    .bg-gray-50 { background-color: #f9fafb !important; }
+    .bg-orange-500 { background-color: #f97316 !important; }
+    .bg-orange-600 { background-color: #ea580c !important; }
+
+    /* text colors */
+    .text-orange-600 { color: #dd6b20 !important; }
+    .text-gray-700 { color: #374151 !important; }
+    .text-gray-600 { color: #4b5563 !important; }
+    .text-gray-500 { color: #6b7280 !important; }
+    .text-blue-600 { color: #2563eb !important; }
+    .text-blue-700 { color: #1d4ed8 !important; }
+    .text-blue-800 { color: #1e40af !important; }
+    .text-white { color: #ffffff !important; }
+
+    /* font sizes */
+    .text-3xl { font-size: 1.875rem !important; line-height: 2.25rem !important; }
+    .text-2xl { font-size: 1.5rem !important; line-height: 2rem !important; }
+    .text-xl { font-size: 1.25rem !important; line-height: 1.75rem !important; }
+    .text-lg { font-size: 1.125rem !important; line-height: 1.75rem !important; }
+    .text-sm { font-size: 0.875rem !important; line-height: 1.25rem !important; }
+
+    /* font weight */
+    .font-extrabold { font-weight: 800 !important; }
+    .font-bold { font-weight: 700 !important; }
+    .font-semibold { font-weight: 600 !important; }
+    .font-medium { font-weight: 500 !important; }
+
+    /* spacing padding */
+    .p-4 { padding: 1rem !important; }
+    .p-6 { padding: 1.5rem !important; }
+    .p-8 { padding: 2rem !important; }
+
+    .py-2\.5, .py-2 { padding-top: 0.625rem !important; padding-bottom: 0.625rem !important; }
+    .py-3 { padding-top: 0.75rem !important; padding-bottom: 0.75rem !important; }
+    .py-4 { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+    .py-6 { padding-top: 1.5rem !important; padding-bottom: 1.5rem !important; }
+    .py-8 { padding-top: 2rem !important; padding-bottom: 2rem !important; }
+    .py-10 { padding-top: 2.5rem !important; padding-bottom: 2.5rem !important; }
+
+    .px-3 { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+    .px-4 { padding-left: 1rem !important; padding-right: 1rem !important; }
+    .px-6 { padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
+
+    /* margin */
+    .mb-2 { margin-bottom: 0.5rem !important; }
+    .mb-3 { margin-bottom: 0.75rem !important; }
+    .mb-4 { margin-bottom: 1rem !important; }
+    .mb-5 { margin-bottom: 1.25rem !important; }
+    .mb-6 { margin-bottom: 1.5rem !important; }
+    .mt-2 { margin-top: 0.5rem !important; }
+    .mt-8 { margin-top: 2rem !important; }
+    .mt-auto { margin-top: auto !important; }
+    .mr-6 { margin-right: 1.5rem !important; }
+
+    /* flexbox */
+    .flex { display: flex !important; }
+    .flex-1 { flex: 1 1 0% !important; }
+    .items-center { align-items: center !important; }
+    .justify-center { justify-content: center !important; }
+    .justify-between { justify-content: space-between !important; }
+    .space-x-4 > :not(template) ~ :not(template) { margin-left: 1rem !important; }
+
+    /* width */
+    .w-full { width: 100% !important; }
+    .w-64 { width: 16rem !important; }
+    .max-w-md { max-width: 28rem !important; }
+
+    /* borders and shadows */
+    .border { border-width: 1px !important; border-style: solid !important; }
+    .border-gray-200 { border-color: #e5e7eb !important; }
+    .border-gray-300 { border-color: #d1d5db !important; }
+    .border-t { border-top-width: 1px !important; border-top-style: solid !important; }
+    .rounded-lg { border-radius: 0.5rem !important; }
+    .rounded-md { border-radius: 0.375rem !important; }
+    .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05) !important; }
+    .shadow-md { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important; }
+    .shadow-lg { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important; }
+    .shadow-inner { box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.06) !important; }
+    .shadow-xl { box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1) !important; }
+
+    /* text align */
+    .text-center { text-align: center !important; }
+    .text-left { text-align: left !important; }
+
+    /* hover effects */
+    a:hover, button:hover {
+        cursor: pointer !important;
+    }
+    .hover\:bg-gray-50:hover { background-color: #f9fafb !important; }
+    .hover\:bg-orange-600:hover { background-color: #ea580c !important; }
+    .hover\:text-blue-700:hover { color: #1d4ed8 !important; }
+    .hover\:text-blue-800:hover { color: #1e40af !important; }
+    .hover\:underline:hover { text-decoration: underline !important; }
+    .hover\:scale-105:hover { transform: scale(1.05) !important; }
+
+    /* focus */
+    .focus\:outline-none:focus { outline: none !important; }
+    .focus\:ring-2:focus { box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5) !important; }
+    .focus\:ring-blue-500:focus { box-shadow: 0 0 0 2px #3b82f6 !important; }
+    .focus\:ring-opacity-50:focus { opacity: 0.5 !important; }
+
+    /* transitions */
+    .transition { transition-property: all !important; }
+    .duration-200 { transition-duration: 200ms !important; }
+    .duration-300 { transition-duration: 300ms !important; }
+    .ease-in-out { transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important; }
+
+    /* transform */
+    .transform { transform-origin: center !important; }
+    .scale-105 { transform: scale(1.05) !important; }
+</style>
+
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md border border-gray-200">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold text-orange-600 mb-2">Lback Admin</h1>
+            <h2 class="text-2xl font-bold text-gray-800">Login to Your Account</h2>
+            <p class="text-gray-500 text-sm mt-2">Access the administration panel</p>
+        </div>
+
+        {% if flash_messages %}
+            <div id="flash-messages" class="mb-4">
+                {% for message in flash_messages %}
+                    <div class="p-3 rounded-md text-sm
+                        {% if message.category == 'error' %} bg-red-100 text-red-800 {% endif %}
+                        {% if message.category == 'warning' %} bg-yellow-100 text-yellow-800 {% endif %}
+                        {% if message.category == 'info' %} bg-blue-100 text-blue-800 {% endif %}
+                        {% if message.category == 'success' %} bg-green-100 text-green-800 {% endif %}
+                        mb-2">
+                        {{ message.message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form action="/admin/login/" method="POST">
+            {% if csrf_token %}
+            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+            {% endif %}
+
+            <div class="mb-5"> 
+                <label for="username" class="block text-gray-700 text-sm font-semibold mb-2">Username</label>
+                <input type="text" id="username" name="username"
+                       class="shadow-sm appearance-none border border-gray-300 rounded-lg w-full py-2.5 px-4 text-gray-700 leading-tight
+                              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                       placeholder="Enter your username"
+                       required autofocus>
+            </div>
+            <div class="mb-6">
+                <label for="password" class="block text-gray-700 text-sm font-semibold mb-2">Password</label>
+                <input type="password" id="password" name="password"
+                       class="shadow-sm appearance-none border border-gray-300 rounded-lg w-full py-2.5 px-4 text-gray-700 leading-tight
+                              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                       placeholder="Enter your password"
+                       required>
+                <p class="text-right text-sm mt-2">
+                    <a href="#" class="text-blue-500 hover:text-blue-700 transition duration-200">Forgot Password?</a>
+                </p>
+            </div>
+            <div class="flex items-center justify-center">
+                <button type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg w-full
+                               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
+                               transition duration-300 ease-in-out transform hover:scale-105">
+                    Login
+                </button>
+            </div>
+        </form>
+
+        <div class="mt-8 pt-6 border-t border-gray-200 text-center text-gray-500 text-sm">
+            <p>For administrative access, please use your designated credentials.</p>
+            <p class="mt-2">Need assistance? Contact support at <a href="mailto:ibrahemabokila@gmail.com" class="text-blue-500 hover:underline">ibrahemabokila@gmail.com</a></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const flashMessages = document.getElementById('flash-messages');
+            if (flashMessages) {
+                setTimeout(function() {
+                    flashMessages.style.transition = 'opacity 0.5s ease-in-out';
+                    flashMessages.style.opacity = '0';
+                    setTimeout(function() {
+                        flashMessages.remove();
+                    }, 500);
+                }, 5000);
+            }
+        });
+    </script>
+</body>
+</html>

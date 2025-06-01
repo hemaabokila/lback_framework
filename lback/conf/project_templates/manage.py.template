@@ -1,0 +1,216 @@
+import argparse
+import sys
+import logging
+
+logger = logging.getLogger(__name__)
+
+try:
+    from lback.core.server import initialize_core_components, config as imported_config, db_manager as imported_db_manager, dispatcher as imported_dispatcher
+except ImportError as e:
+    logger.critical(f"FATAL ERROR: Could not import core components from lback.core.server: {e}")
+    sys.exit(1)
+
+from lback.commands.app import AppCommands
+from lback.commands.migration import MigrationCommands
+from lback.commands.runner import RunnerCommands
+from lback.commands.admin import AdminCommands
+from lback.commands.db_seed import setup_database_and_defaults
+
+
+def main():
+    """
+    Main entry point for the Lback Framework management utility (manage.py).
+    Parses command-line arguments, initializes core components (if needed), and dispatches.
+    Emits signals before and after command execution.
+    """
+    command_successful = False
+    command_exception = None
+    command_result = None
+
+    parser = argparse.ArgumentParser(description="Lback Framework Management Utility")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    startapp_parser = subparsers.add_parser("startapp", help="Create a new app")
+    startapp_parser.add_argument("name", help="App name")
+    rollback_parser = subparsers.add_parser("rollback", help="Rollback migrations for a table")
+    rollback_parser.add_argument("table", help="Table name")
+    subparsers.add_parser("migrate", help="Apply database migrations")
+    subparsers.add_parser("makemigrations", help="Create new migration files")
+
+    runserver_parser = subparsers.add_parser("runserver", help="Run the development server")
+    runserver_parser.add_argument('--host', default='127.0.0.1', help='Host to run the server on')
+    runserver_parser.add_argument('--port', type=int, default=8000, help='Port to run the server on')
+
+    subparsers.add_parser("test", help="Run tests")
+    subparsers.add_parser("collectstatic", help="Collect static files")
+    subparsers.add_parser("init_db", help="Initialize the database")
+    subparsers.add_parser("create_superuser", help="Create a superuser")
+    subparsers.add_parser("reset_password", help="Reset a user's password")
+    subparsers.add_parser("deactivate_user", help="Deactivate a user")
+    subparsers.add_parser("list_users", help="List all users")
+    subparsers.add_parser("activate_user", help="Activate a user")
+
+    args = parser.parse_args()
+
+    commands_needing_core_init = [
+        "runserver", "migrate", "makemigrations", "rollback", "test",
+        "collectstatic", "init_db", "create_superuser", "reset_password",
+        "deactivate_user", "list_users", "activate_user"
+    ]
+
+    _config = imported_config
+    _db_manager = imported_db_manager
+    _dispatcher = imported_dispatcher
+
+
+    if args.command in commands_needing_core_init:
+        try:
+            logger.info(f"Initializing core components for command: {args.command}")
+            initialize_core_components()
+            logger.info("Core components initialized.")
+
+            module_server_after_init = sys.modules.get('lback.core.server')
+            if module_server_after_init:
+                _config = getattr(module_server_after_init, 'config', _config)
+                _db_manager = getattr(module_server_after_init, 'db_manager', _db_manager)
+                _dispatcher = getattr(module_server_after_init, 'dispatcher', _dispatcher)
+
+        except Exception as e:
+            if args.command not in ["makemigrations", "migrate", "rollback", "init_db"]:
+                logger.critical(f"Failed to initialize core components for command '{args.command}': {e}", exc_info=True)
+                sys.exit(1)
+            else:
+                logger.warning(f"Core components initialization potentially failed for command '{args.command}', possibly related to DB: {e}. Proceeding with command execution.", exc_info=True)
+
+    command_name = args.command
+
+    try:
+        if _dispatcher is not None:
+            _dispatcher.send("command_started", sender=None, command_name=command_name, args=args)
+            logger.debug(f"Signal 'command_started' sent for command '{command_name}'.")
+        else:
+            logging.debug(f"Dispatcher not available. Skipping 'command_started' signal for command '{command_name}'.")
+
+        if command_name == "startapp":
+            app_name = getattr(args, "name", None)
+            if not app_name:
+                print("Error: startapp command requires an app name.", file=sys.stderr)
+                sys.exit(1)
+            command_handler = AppCommands(app_name)
+            command_result = command_handler.startapp()
+            command_successful = True
+
+        elif command_name == "runserver":
+            command_handler = RunnerCommands()
+            command_result = command_handler.runserver()
+            command_successful = True
+
+        elif command_name in ["migrate", "makemigrations", "rollback"]:
+            if _config is None:
+                print(f"Error: Config not initialized by core components for command '{command_name}'. Cannot proceed.", file=sys.stderr)
+                sys.stderr.flush()
+                sys.exit(1)
+
+            command_handler = MigrationCommands(config=_config)
+
+            if command_name == "migrate":
+                if _db_manager is None:
+                    print(f"Error: Database Manager not initialized for command '{command_name}'. Cannot proceed.", file=sys.stderr)
+                    sys.stderr.flush()
+                    sys.exit(1)
+                command_result = command_handler.migrate()
+            elif command_name == "makemigrations":
+                command_result = command_handler.makemigrations()
+            elif command_name == "rollback":
+                if _db_manager is None:
+                    print(f"Error: Database Manager not initialized for command '{command_name}'. Cannot proceed.", file=sys.stderr)
+                    sys.stderr.flush()
+                    sys.exit(1)
+                table_name = getattr(args, "table", None)
+                if not table_name:
+                    print("Error: rollback command requires a table name.", file=sys.stderr)
+                    sys.stderr.flush()
+                    sys.exit(1)
+                command_result = command_handler.rollback(table_name)
+            command_successful = True
+
+        elif command_name in ["test", "collectstatic"]:
+            if _config is None:
+                print(f"Error: Config not initialized by core components for command '{command_name}'. Cannot proceed.", file=sys.stderr)
+                sys.stderr.flush()
+                sys.exit(1)
+            if command_name == "test" and _db_manager is None:
+                print(f"Error: Database Manager not initialized by core components for command '{command_name}'. Cannot proceed with tests.", file=sys.stderr)
+                sys.stderr.flush()
+                sys.exit(1)
+
+            command_handler = RunnerCommands()
+
+            if command_name == "test":
+                command_result = command_handler.test()
+            elif command_name == "collectstatic":
+                command_result = command_handler.collectstatic()
+            command_successful = True
+
+        elif command_name in ["init_db", "create_superuser", "reset_password", "deactivate_user", "list_users", "activate_user"]:
+            if _config is None or _db_manager is None:
+                print(f"Error: Config or Database Manager not initialized by core components for command '{command_name}'. Cannot proceed.", file=sys.stderr)
+                sys.stderr.flush()
+                sys.exit(1)
+            command_handler = AdminCommands()
+
+            if command_name == "init_db":
+                command_result = setup_database_and_defaults(_db_manager)
+            elif command_name == "create_superuser":
+                command_result = command_handler.create_superuser()
+            elif command_name == "reset_password":
+                command_result = command_handler.reset_password()
+            elif command_name == "deactivate_user":
+                command_result = command_handler.deactivate_user()
+            elif command_name == "list_users":
+                command_result = command_handler.list_users()
+            elif command_name == "activate_user":
+                command_result = command_handler.activate_user()
+            command_successful = True
+
+        else:
+            print(f"Unknown command: {command_name}", file=sys.stderr)
+            sys.stderr.flush()
+            sys.exit(1)
+
+    except SystemExit as e:
+        logger.info(f"Server exiting for reload: {e}")
+        command_successful = True
+        command_exception = e
+        raise
+
+    except Exception as e:
+        command_exception = e
+        command_successful = False
+        logger.error(f"Command '{command_name}' failed with exception: {e}", exc_info=True)
+
+    finally:
+        if 'command_handler' in locals() and command_handler is not None:
+            try:
+                if _dispatcher is not None:
+                    if command_successful:
+                        _dispatcher.send("command_finished", sender=command_handler, command_name=command_name, args=args, result=command_result)
+                        logger.debug(f"Signal 'command_finished' sent for command '{command_name}'.")
+                    else:
+                        _dispatcher.send("command_failed", sender=command_handler, command_name=command_name, args=args, exception=command_exception)
+                        logger.debug(f"Signal 'command_failed' sent for command '{command_name}'.")
+                else:
+                    logging.debug(f"Dispatcher not available. Skipping command finished/failed signal for command '{command_name}'.")
+            except Exception as sig_e:
+                logging.error(f"Error sending command finished/failed signal for command '{command_name}': {sig_e}", exc_info=True)
+        elif not command_successful and command_exception is not None:
+            logger.error(f"Command '{command_name}' failed before handler was fully initialized.", exc_info=True)
+    if not command_successful and command_exception is not None:
+        raise command_exception
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        logger.exception(f"An unhandled exception occurred during manage.py execution:")
+        sys.exit(1)
