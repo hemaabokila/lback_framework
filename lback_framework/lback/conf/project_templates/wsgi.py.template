@@ -1,0 +1,8 @@
+# wsgi entry point for the lback core server
+# This file is part of the lback project, licensed under the Apache License 2.0.
+
+from lback.core.server import initialize_core_components, wsgi_application
+
+initialize_core_components()
+
+application = wsgi_application

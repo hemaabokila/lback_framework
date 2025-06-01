@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Error: {{ exception_type }}</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; line-height: 1.6; color: #333; direction: ltr; text-align: left;}
+        h1, h2 { color: #c0392b; margin-bottom: 10px; }
+        h1 { font-size: 2em; }
+        h2 { font-size: 1.5em; margin-top: 25px; }
+        pre { background-color: #f4f4f4; padding: 15px; overflow-x: auto; border-radius: 5px; text-align: left; direction: ltr;}
+        .traceback-frame { border: 1px solid #eee; padding: 15px; margin-bottom: 20px; background-color: #fff; border-radius: 5px; }
+        .frame-location { font-weight: bold; color: #555; margin-bottom: 5px; }
+        .frame-line { font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace; font-size: 0.9em; color: #000; }
+        .request-details { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
+        .request-details h3 { font-size: 1.2em; margin-bottom: 10px; color: #555; }
+        .request-details ul { list-style: none; padding: 0; }
+        .request-details li { margin-bottom: 8px; }
+        .request-details li strong { color: #000; }
+        .error-message { font-size: 1.2em; color: #c0392b; margin-bottom: 20px; }
+        .footer { margin-top: 40px; border-top: 1px solid #eee; padding-top: 15px; font-size: 0.9em; color: #777; text-align: center;}
+    </style>
+</head>
+<body>
+    <h1>Debug Error</h1>
+    <p class="error-message"><strong>Error Type:</strong> {{ exception_type }}</p>
+    <p class="error-message"><strong>Error Message:</strong> {{ exception_message }}</p>
+
+    <h2>Traceback:</h2>
+    {% if traceback_frames %}
+        {% for frame in traceback_frames %}
+            <div class="traceback-frame">
+                <p class="frame-location">File "{{ frame.filename }}", line {{ frame.lineno }}{% if frame.name %}, in <code>{{ frame.name }}</code>{% endif %}</p>
+                {% if frame.line %}
+                    <pre class="frame-line">{{ frame.line | e }}</pre>
+                {% else %}
+                    <p>Source line not available.</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>Traceback information not available.</p>
+    {% endif %}
+
+    <div class="request-details">
+        <h2>Request Details:</h2>
+        <p><strong>Method:</strong> {{ request_method }}</p>
+        <p><strong>Path:</strong> {{ request_path }}</p>
+        <h3>Headers:</h3>
+        <ul>
+            {% for key, value in request_headers.items() %}
+                <li><strong>{{ key | e }}:</strong> {{ value | e }}</li>
+            {% endfor %}
+        </ul>
+        {% if request_body %}
+            <h3>Body:</h3>
+            <pre>{{ request_body | e }}</pre>
+        {% endif %}
+    </div>
+
+    <div class="footer">
+        Lback developed by Ibrahem abokila | Contact: <a href="mailto:ibrahemabokila@gmail.com">ibrahemabokila@gmail.com</a>
+    </div>
+
+</body>
+</html>

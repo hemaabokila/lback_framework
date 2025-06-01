@@ -1,0 +1,9 @@
+from lback.api.serializer import BaseModelSerializer
+...
+from .models import Course
+
+class CourseSerializer(BaseModelSerializer):
+    class Meta:
+        model = Course
+        fields = '__all__'
+...
