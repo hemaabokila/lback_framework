@@ -87,7 +87,7 @@ PROJECT_ROOT = BASE_DIR
 STATIC_URL = '/static/'
 # The absolute path to the directory where all static files will be collected for deployment.
 # It's a common practice to use a dedicated directory like 'staticfiles' for this.
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') 
+STATIC_ROOT = os.path.join(BASE_DIR, 'static') 
 # A list of absolute paths to directories where the framework should look for static files.
 # This allows you to organize static files within apps or in a central project-level directory.
 STATIC_DIRS = [
@@ -194,8 +194,6 @@ MIDDLEWARES = [
 # Requests with a Host header not matching any entry in this list will be rejected.
 ALLOWED_HOSTS = [
     "127.0.0.1", # Local development IP address
-    "localhost", # Standard localhost hostname
-    # "your-production-domain.com", # Add your live domain(s) here
 ]
 
 # Firewall specific settings for `FirewallMiddleware`.

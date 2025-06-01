@@ -4,6 +4,8 @@
 ![Version](https://img.shields.io/badge/Version-1.0.0-orange)
 <img src="lback/static/Logo.png" alt="Lback Logo" width="38"/>
 
+**[Full Documentation](https://hemaabokila.github.io/lback-docs/)**
+
 Lback A modern and powerful Python web framework aiming to accelerate web application development, focusing on structured architecture, scalability, and providing essential tools out-of-the-box.
 
 ## Table of Contents
@@ -1225,7 +1227,7 @@ This file provides a quick overview of the Lback Framework.
 
 For detailed information, examples, and in-depth explanations of all features and components, please visit the full documentation on the dedicated website:
 
-[Lback Docs](www.lback.com)
+[Lback Docs](https://hemaabokila.github.io/lback-docs/)
 ## About the Author / Contact
 
 Lback Framework is developed by:

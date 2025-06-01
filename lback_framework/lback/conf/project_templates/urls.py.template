@@ -2,6 +2,6 @@
 from lback.core.urls_utils import include
 
 urlpatterns = [
-    # include('courses.urls', prefix='/'),
-    include('admin.urls', prefix='/admin/'),
+    # include('lback.courses.urls', prefix='/'),
+    include('lback.admin.urls', prefix='/admin/'),
 ]

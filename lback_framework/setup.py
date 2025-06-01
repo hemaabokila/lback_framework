@@ -11,7 +11,7 @@ def read(fname):
         return f.read()
 
 
-NAME = 'lback'
+NAME = 'lback_framework'
 VERSION = '0.1.0'
 DESCRIPTION = 'A modern and powerful Python web framework.'
 LONG_DESCRIPTION = read('README.md') if os.path.exists('README.md') else DESCRIPTION

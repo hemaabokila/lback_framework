@@ -30,6 +30,9 @@ class ProjectCommands:
         self._copy_template('project_templates/urls.py.template', os.path.join(path, 'urls.py'))
         self._copy_template('project_templates/wsgi.py.template', os.path.join(path, 'wsgi.py'))
 
+        alembic_dir_path = os.path.join(os.path.dirname(path), 'alembic')
+        os.makedirs(alembic_dir_path, exist_ok=True)
+
         manage_py_path = os.path.join(os.path.dirname(path), 'manage.py')
         self._copy_template('project_templates/manage.py.template', manage_py_path)
 
@@ -38,6 +41,12 @@ class ProjectCommands:
 
         alembic_env_py = os.path.join(os.path.dirname(path), 'alembic/env.py')
         self._copy_template('alembic_template/env.py.template', alembic_env_py)
+
+        alembic_script = os.path.join(os.path.dirname(path), 'alembic/script.py.mako')
+        self._copy_template('alembic_template/script.py.mako.template', alembic_script)
+
+        folder_name = 'versions'
+        folder_path = os.path.join(alembic_dir_path, folder_name)
 
         alembic_ini_path = os.path.join(os.path.dirname(path), 'alembic.ini')
         self._copy_template('alembic_template/alembic.ini.template', alembic_ini_path)
@@ -50,6 +59,12 @@ class ProjectCommands:
 
         admin_css = os.path.join(os.path.dirname(path), 'static/css/tailwind.min.css')
         self._copy_template('project_templates/tailwind.min.css', admin_css)
+
+        try:
+            os.makedirs(folder_path, exist_ok=True)
+            logger.info(f"Empty folder '{folder_name}' created successfully inside 'alembic' at: {folder_path}")
+        except OSError as e:
+            logger.error(f"Error creating folder '{folder_name}' inside 'alembic': {e}")
 
     
     def _copy_template(self, template_path, destination_path):

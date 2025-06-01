@@ -27,9 +27,9 @@ class AppCommands:
         self._copy_template('app_templates/__init__.py.template', os.path.join(path, '__init__.py'))
         self._copy_template('app_templates/models.py.template', os.path.join(path, 'models.py'))
         self._copy_template('app_templates/urls.py.template', os.path.join(path, 'urls.py'))
-        self._copy_template('app_templates/view.py.template', os.path.join(path, 'views.py'))
+        self._copy_template('app_templates/views.py.template', os.path.join(path, 'views.py'))
         self._copy_template('app_templates/admin.py.template', os.path.join(path, 'admin.py'))
-        self._copy_template('app_templates/serializer.py.template', os.path.join(path, 'serializer.py'))
+        self._copy_template('app_templates/serializers.py.template', os.path.join(path, 'serializers.py'))
 
     def _copy_template(self, template_path, destination_path):
         """Copy a template file to the destination path."""

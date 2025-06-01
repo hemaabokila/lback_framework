@@ -5,9 +5,6 @@ include requirements.txt
 recursive-include lback/templates *
 recursive-include lback/static *
 
-recursive-include docs *
-recursive-include assets*
-
 recursive-include lback/conf *
 
 global-exclude __pycache__
