@@ -36,7 +36,7 @@ Once your virtual environment is activated (if you chose to use one), you can in
 
     .. code-block:: bash
 
-        pip install lback
+        pip install lback_framework
 
 3. **create a progect**:
 

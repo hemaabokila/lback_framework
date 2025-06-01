@@ -79,7 +79,7 @@ Lback Framework offers a rich set of features to help you build robust web appli
 To install the Lback Framework, you can use pip:
 
 ```bash
-pip install lback
+pip install lback_framework
 ```
 ## Getting Started
 Start your first project by following these simple steps.
@@ -1227,7 +1227,7 @@ This file provides a quick overview of the Lback Framework.
 
 For detailed information, examples, and in-depth explanations of all features and components, please visit the full documentation on the dedicated website:
 
-[Lback Docs](www.lback.com)
+[Lback Docs](https://hemaabokila.github.io/lback-docs/)
 ## About the Author / Contact
 
 Lback Framework is developed by:

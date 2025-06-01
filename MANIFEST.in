@@ -1,13 +1,9 @@
 include README.md
 include LICENSE
-include CONTRIBUTING.md
 include requirements.txt
 
 recursive-include lback/templates *
 recursive-include lback/static *
-
-recursive-include docs *
-recursive-include assets*
 
 recursive-include lback/conf *
 
