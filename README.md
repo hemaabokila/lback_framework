@@ -107,7 +107,7 @@ You need to install `libmagic` using your system's package manager **before** in
 **On Debian/Ubuntu-based systems:**
 ```bash
 sudo apt-get update
-sudo apt-get install libmagic1
+sudo apt-get install libmagic
 ```
 **On Fedora/RHEL/CentOS-based systems:**
 ```bash
