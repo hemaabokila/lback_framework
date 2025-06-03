@@ -124,7 +124,7 @@ Lback's installation process will automatically handle this dependency for you u
 ### 3. Install Lback Framework**
 With your virtual environment active and system-level dependencies installed (if applicable), you can now install the Lback Framework using pip:
 ```bash
-pip install lback_framework
+pip install lback-framework
 ```
 ## Getting Started
 Start your first project by following these simple steps.
