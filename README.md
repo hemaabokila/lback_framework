@@ -76,8 +76,53 @@ Lback Framework offers a rich set of features to help you build robust web appli
 
 ## Installation
 
-To install the Lback Framework, you can use pip:
+To ensure a smooth installation and proper functioning of Lback Framework, especially for file handling features, please follow these steps:
 
+### 1. Create and Activate a Virtual Environment (Recommended)
+
+It's highly recommended to create a dedicated virtual environment for your project. This isolates your project's dependencies and prevents conflicts with other Python projects on your system.
+
+```bash
+# Create a virtual environment named 'venv' in your project directory
+python3 -m venv venv
+
+# Activate the virtual environment
+
+# On macOS and Linux:
+source venv/bin/activate
+
+# On Windows:
+.\venv\Scripts\activate
+```
+Once activated, your terminal prompt will typically show `(venv)` indicating you are in the virtual environment.
+### 2. Install System-level Dependencies (for File Type Detection)
+Lback Framework utilizes `python-magic` for robust file type detection.
+
+This Python library relies on a native system library called `libmagic`.
+
+You need to install `libmagic` using your system's package manager **before** installing Lback's Python packages.
+
+**For macOS and Linux users:**
+
+**On Debian/Ubuntu-based systems:**
+```bash
+sudo apt-get update
+sudo apt-get install libmagic1
+```
+**On Fedora/RHEL/CentOS-based systems:**
+```bash
+sudo dnf install file-libs # or sudo yum install file-libs
+```
+**On macOS (using Homebrew):**
+```bash
+brew install libmagic
+```
+**For Windows users:**
+No manual steps are typically required for `libmagic`.
+
+Lback's installation process will automatically handle this dependency for you using `python-magic-bin`.
+### 3. Install Lback Framework**
+With your virtual environment active and system-level dependencies installed (if applicable), you can now install the Lback Framework using pip:
 ```bash
 pip install lback_framework
 ```
