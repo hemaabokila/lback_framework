@@ -141,13 +141,17 @@ Replace myproject with your desired project name.
 A new folder named after your project (myproject) will be created containing the following basic structure (similar to Django's structure):
 ```bash
 myproject/
-├── manage.py           # Command-line utility for project management
+├── alembic/
+│   ├── versions/
+│   ├── env.py
+│   └── script.py.mako  
 ├── myproject/          # Main project package folder
 │   ├── __init__.py
 │   ├── urls.py         # Main URL configurations
 │   └── wsgi.py         # WSGI entry point for production deployment
-└── .env                # Environment variables file (optional)
-└── config.json         # Additional JSON format config file (optional)
+├── .env                # Environment variables file (optional)
+├── config.json         # Additional JSON format config file (optional)
+├── manage.py           # Command-line utility for project management
 └── settings.py         # Main settings file
 ```
 ### Run the Development Server
